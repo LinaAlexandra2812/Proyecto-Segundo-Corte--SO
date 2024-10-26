@@ -10,6 +10,36 @@
 #include <string.h>
 #include <unistd.h>
 #include "protocol.h"
+#include "versions.h"
+
+
+void serialize_message(const Message *msg, char *buffer){
+    memcpy(buffer, msg, sizeof(Message));
+}
+
+void deserialize_message(const char *buffer, Message *msg){
+    memcpy(msg, buffer, sizeof(Message));
+}
+
+void handle_add(const Message *msg){
+    printf("ADD: %s\n", msg->filename);
+    add(msg->filename, msg->comment);
+}
+
+void  handle_list(const Message *msg){
+    printf("LIST: %s\n", msg->filename);
+    list(msg->filename);
+}
+
+void handle_get(const Message *msg){
+    printf("GET: %s\n", msg->filename);
+    get(msg->filename, msg->versions);
+}
+
+void handle_list_all(){
+    printf("LIST ALL\n");
+    list(NULL);
+}
 
 int send_greeting(int s){
     char message[256];

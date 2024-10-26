@@ -24,6 +24,41 @@ void handle_signal(int signal){
     exit(EXIT_SUCCESS);
 }
 
+void handle_client(int client_socket)
+{
+    char buffer[1024];
+    int bytes_read;
+
+    while(bytes_read = read(client_socket, buffer, sizeof(buffer)) > 0)
+    {
+        buffer[bytes_read] = '\0';
+        Message msg;
+        
+        deserialize_message(buffer, &msg);
+
+        switch (msg.command)
+        {
+            case CMD_ADD:
+                handle_add(&msg);
+                break;
+            case CMD_LIST:
+                handle_list(&msg);
+                break;
+            case CMD_GET:
+                handle_get(&msg);
+                break;
+            case CMD_LIST_ALL:
+                handle_list_all();
+                break;
+            default:
+                printf("Invalid command.\n");
+                break;
+        }
+    }
+    
+    close(client_socket);
+}
+
 int main (int argc, char * argv[]){
     int c;
     struct sockaddr_in addr, client;
@@ -75,16 +110,7 @@ int main (int argc, char * argv[]){
     //5. (comunicación) 
     while (1)
     {
-        //  recibir saludo - read
-        if(receive_greeting(c) < 0) {
-            printf("Error receiving messagee or client disconnected.\n");
-            break;
-        }
-        //  enviar saludo - write
-        if(send_greeting(c) < 0) {
-            printf("Error sending reply");
-            break;
-        }
+        handle_client(c);
     }
     
     

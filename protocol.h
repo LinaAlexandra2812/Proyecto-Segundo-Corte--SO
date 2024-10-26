@@ -5,6 +5,37 @@
  * @copyright MIT License
  */
 
+#ifndef PROTOCOL_H
+#define PROTOCOL_H
+
+#define CMD_ADD 1
+#define CMD_LIST 2
+#define CMD_GET 3
+#define CMD_LIST_ALL 4
+
+typedef struct {
+    int command;
+    char filename[256];
+    char comment [256];
+    int versions;
+} Message;
+
+typedef struct {
+    char filename[256];
+    int version;
+    char comment[256];
+    char content[1024];
+} Version;
+
+void serialize_message(const Message *msg, char *buffer);
+void deserialize_message(const char *buffer, Message *msg);
+
+void handle_add(const Message *msg);
+void handle_list(const Message *msg);
+void handle_get(const Message *msg);
+void handle_list_all();
+
+
 /**
  * @brief Envía un mensaje de saludo
  * 
@@ -20,3 +51,5 @@ int send_greeting(int s);
  * @return int 
  */
 int receive_greeting(int s);
+
+#endif //PROTOCOL_H
