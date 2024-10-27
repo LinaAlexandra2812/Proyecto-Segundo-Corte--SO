@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include "protocol.h"
 #include <signal.h>
+#include <string.h>
 
 #define BUFFER_SIZE 1024
 
@@ -64,12 +65,86 @@ int main(int argc, char *argv[])
 
     // 3. (comunicación) Enviar y recibir mensajes -> send_greeting(s, ...), receive_greeting(s, ...)
     char buffer[BUFFER_SIZE];
+    Message msg;
+
     while (1)
     {
         printf("Enter a command: ");
         if (fgets(buffer, BUFFER_SIZE, stdin) == NULL)
         {
             break;
+        }
+
+        buffer[strcspn(buffer, "\n")] = 0;
+
+        if (strncmp(buffer, "add", 3) == 0)
+        {
+            msg.command = CMD_ADD;
+
+            char *filename = strtok(buffer + 4, " ");
+            char *comment = strtok(NULL, " ");
+
+            if(filename && comment)
+            {
+                strncpy(msg.filename, filename, sizeof(msg.filename)-1);
+                strncpy(msg.comment, comment, sizeof(msg.comment)-1);
+
+                handle_add(&msg);
+            } 
+            else
+            {
+                printf("Invalid command.\n Usage: add <filename> \"<comment>\"\n");
+                continue;
+            }
+            continue;
+        } else if (strncmp(buffer, "list", 4) == 0)
+        {
+            msg.command = CMD_LIST;
+
+            char *filename = strtok(buffer + 5, " ");
+
+            if(filename)
+            {
+                strncpy(msg.filename, filename, sizeof(msg.filename)-1);
+                handle_list(&msg);
+            } 
+            else
+            {
+                printf("Invalid command.\n Usage: list <filename>\n");
+                continue;
+            }
+            continue;
+
+        } else if (strncmp(buffer, "get", 3) == 0)
+        {
+            msg.command = CMD_GET;
+
+            char *versions= strtok(buffer + 4, " ");
+            char *filename = strtok(NULL, " ");
+
+            if(filename && versions)
+            {
+                strncpy(msg.filename, filename, sizeof(msg.filename)-1);
+                msg.versions = atoi(versions);
+
+                handle_get(&msg);
+            } 
+            else
+            {
+                printf("Invalid command.\n Usage: get <filename> <version>\n");
+                continue;
+            }
+            continue;
+
+        } else if (strncmp(buffer, "list_all", 8) == 0)
+        {
+            msg.command = CMD_LIST_ALL;
+            handle_list_all();
+            continue;;
+        } else
+        {
+            printf("Invalid command.\n");
+            continue;
         }
 
         if (write(s, buffer, strlen(buffer)) < 0)
@@ -88,8 +163,10 @@ int main(int argc, char *argv[])
         buffer[bytes_read] = '\0';
         printf("Server response: %s\n", buffer);
 
-        // 4. Cerrar el conector
-        close(s);
-
-        return 0;
     }
+
+    // 4. Cerrar el conector
+    close(s);
+
+    return 0;
+}

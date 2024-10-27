@@ -21,17 +21,17 @@ void deserialize_message(const char *buffer, Message *msg){
     memcpy(msg, buffer, sizeof(Message));
 }
 
-void handle_add(const Message *msg){
+void handle_add(Message *msg){
     printf("ADD: %s\n", msg->filename);
     add(msg->filename, msg->comment);
 }
 
-void  handle_list(const Message *msg){
+void  handle_list(Message *msg){
     printf("LIST: %s\n", msg->filename);
     list(msg->filename);
 }
 
-void handle_get(const Message *msg){
+void handle_get(Message *msg){
     printf("GET: %s\n", msg->filename);
     get(msg->filename, msg->versions);
 }

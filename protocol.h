@@ -30,9 +30,9 @@ typedef struct {
 void serialize_message(const Message *msg, char *buffer);
 void deserialize_message(const char *buffer, Message *msg);
 
-void handle_add(const Message *msg);
-void handle_list(const Message *msg);
-void handle_get(const Message *msg);
+void handle_add(Message *msg);
+void handle_list(Message *msg);
+void handle_get(Message *msg);
 void handle_list_all();
 
 

@@ -28,7 +28,7 @@ void handle_client(int client_socket)
 {
     char buffer[1024];
     int bytes_read;
-
+ 
     while(bytes_read = read(client_socket, buffer, sizeof(buffer)) > 0)
     {
         buffer[bytes_read] = '\0';
@@ -64,6 +64,12 @@ int main (int argc, char * argv[]){
     struct sockaddr_in addr, client;
     socklen_t client_len = sizeof(client);
 
+    //Verificar que el puerto esté proporcionado como argumento
+    if(argc != 2){
+        fprintf(stderr, "Uso: %s <puerto>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     //0. Instalar los manejadores de señales para SIGINT, SIGTERM
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
@@ -79,7 +85,7 @@ int main (int argc, char * argv[]){
     memset(&addr, 0, sizeof(struct sockaddr_in));
 
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(1234); //Puerto
+    addr.sin_port = htons(atoi(argv[1])); //Puerto
     addr.sin_addr.s_addr = INADDR_ANY; //Cualquier dirección 0.0.0.0
 
     if(bind(s, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)) < 0) {
@@ -97,26 +103,24 @@ int main (int argc, char * argv[]){
 
     printf("Server waiting for connections...\n");
 
-    //(bloqueante) esperar por una conexión o cliente c - accept
-    c = accept(s, (struct sockaddr *) &client, &client_len);
-    if (c < 0){
-        perror("Error accepting connection.");
-        close(s);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Connection accepted.\n");
-
     //5. (comunicación) 
     while (1)
     {
+        //(bloqueante) esperar por una conexión o cliente c - accept
+        c = accept(s, (struct sockaddr *) &client, &client_len);
+        if (c < 0){
+            perror("Error accepting connection.");
+            close(s);
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Connection accepted.\n");
+
         handle_client(c);
+        //6. cerrar el socket del cliente c - close
+        close(c);
     }
     
-    
-    //  ....
-    //6. cerrar el socket del cliente c - close
-    close(c);
     //7. cerrar el socket del servidor s - close
     close(s);
 
