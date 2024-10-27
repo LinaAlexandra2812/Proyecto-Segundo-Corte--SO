@@ -10,7 +10,9 @@ rversionsd: server.o protocol.o sha256.o versions.o
 	gcc -c $< -o $@
 
 clean:
-	rm -r *.o client server docs
+	rm -r *.o rversions rversionsd
+	rm -rf docs
 
 doc:
 	doxygen
+

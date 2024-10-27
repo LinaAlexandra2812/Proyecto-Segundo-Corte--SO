@@ -13,6 +13,8 @@
 #include <netinet/ip.h>
 #include <signal.h>
 #include "protocol.h"
+#include <sys/stat.h>
+#include "versions.h"
 
 int s;
 
@@ -24,12 +26,39 @@ void handle_signal(int signal){
     exit(EXIT_SUCCESS);
 }
 
+void init_version_system(){
+    struct stat st;
+
+#ifdef __linux__
+    if (mkdir(VERSIONS_DIR, 0755) < 0){
+        perror("Error creating versions directory.");
+        exit(EXIT_FAILURE);
+    }
+#elif _WIN32
+    if (mkdir(VERSIONS_DIR) < 0){
+        perror("Error creating versions directory.");
+        exit(EXIT_FAILURE);
+    }
+#endif
+
+    //Crea el archivo .versions/versions.db si no existe
+    if (stat(VERSIONS_DB_PATH, &st) != 0){
+        int fd = creat(VERSIONS_DB_PATH, 0755);
+        if (fd < 0){
+            perror("Error creating versions database.");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+
+}
+
 void handle_client(int client_socket)
 {
     char buffer[1024];
     int bytes_read;
  
-    while(bytes_read = read(client_socket, buffer, sizeof(buffer)) > 0)
+    while((bytes_read = read(client_socket, buffer, sizeof(buffer))) > 0)
     {
         buffer[bytes_read] = '\0';
         Message msg;
@@ -69,6 +98,9 @@ int main (int argc, char * argv[]){
         fprintf(stderr, "Uso: %s <puerto>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    //Inicializar el sistema de versiones
+    init_version_system();
 
     //0. Instalar los manejadores de señales para SIGINT, SIGTERM
     signal(SIGINT, handle_signal);
