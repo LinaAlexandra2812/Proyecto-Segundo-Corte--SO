@@ -108,9 +108,11 @@ int main(int argc, char *argv[])
                 strncpy(msg.filename, filename, sizeof(msg.filename)-1);
                 handle_list(&msg);
             } 
+            
             else
             {
-                printf("Invalid command.\n Usage: list <filename>\n");
+                //printf("Invalid command.\n Usage: list <filename>\n");
+                handle_list_all();
                 continue;
             }
             continue;

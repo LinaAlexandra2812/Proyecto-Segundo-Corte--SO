@@ -26,31 +26,19 @@ void handle_signal(int signal){
     exit(EXIT_SUCCESS);
 }
 
-void init_version_system(){
-    struct stat st;
+void init_version_system() {
+    struct stat st = {0};
 
-#ifdef __linux__
-    if (mkdir(VERSIONS_DIR, 0755) < 0){
-        perror("Error creating versions directory.");
-        exit(EXIT_FAILURE);
-    }
-#elif _WIN32
-    if (mkdir(VERSIONS_DIR) < 0){
-        perror("Error creating versions directory.");
-        exit(EXIT_FAILURE);
-    }
-#endif
-
-    //Crea el archivo .versions/versions.db si no existe
-    if (stat(VERSIONS_DB_PATH, &st) != 0){
-        int fd = creat(VERSIONS_DB_PATH, 0755);
-        if (fd < 0){
-            perror("Error creating versions database.");
+    // Verificar si el directorio "versions" ya existe
+    if (stat("versions", &st) == -1) {
+        // Si no existe, crear el directorio
+        if (mkdir("versions", 0700) != 0) {
+            perror("Error creating versions directory");
             exit(EXIT_FAILURE);
         }
+    } else {
+        printf("Versions directory already exists.\n");
     }
-
-
 }
 
 void handle_client(int client_socket)
@@ -106,6 +94,15 @@ int main (int argc, char * argv[]){
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
     
+    //Crear el directorio de versiones si no existe
+    struct stat st = {0};
+    if (stat("versions", &st) == -1) {
+        if (mkdir("versions", 0700) != 0) {
+            perror("Error creating versions directory");
+            exit(EXIT_FAILURE);
+        }
+    }
+
     //1. Obtener un conector -> s = socket(...)
     s = socket(AF_INET, SOCK_STREAM, 0);
     if (s < 0) {
@@ -149,6 +146,7 @@ int main (int argc, char * argv[]){
         printf("Connection accepted.\n");
 
         handle_client(c);
+        
         //6. cerrar el socket del cliente c - close
         close(c);
     }

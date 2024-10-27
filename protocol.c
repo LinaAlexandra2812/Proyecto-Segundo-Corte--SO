@@ -37,7 +37,7 @@ void handle_get(Message *msg){
 }
 
 void handle_list_all(){
-    printf("LIST ALL\n");
+    printf("LIST\n");
     list(NULL);
 }
 
