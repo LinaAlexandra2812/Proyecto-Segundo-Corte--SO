@@ -12,8 +12,10 @@
 #include <sys/socket.h>
 #include <netinet/ip.h>
 #include <signal.h>
-#include "protocol.h"
 #include <sys/stat.h>
+#include <pthread.h>
+
+#include "protocol.h"
 #include "versions.h"
 
 int s;
@@ -41,20 +43,20 @@ void init_version_system() {
     }
 }
 
-void handle_client(int client_socket)
-{
-    char buffer[1024];
+void *handle_client(void *arg) {
+    int client_socket = *(int *)arg;
+    free(arg);
+
+    char buffer[1028];
     int bytes_read;
- 
-    while((bytes_read = read(client_socket, buffer, sizeof(buffer))) > 0)
-    {
+
+    while ((bytes_read = read(client_socket, buffer, sizeof(buffer))) > 0) {
         buffer[bytes_read] = '\0';
         Message msg;
-        
+
         deserialize_message(buffer, &msg);
 
-        switch (msg.command)
-        {
+        switch (msg.command) {
             case CMD_ADD:
                 handle_add(&msg);
                 break;
@@ -64,28 +66,27 @@ void handle_client(int client_socket)
             case CMD_GET:
                 handle_get(&msg);
                 break;
-            case CMD_LIST_ALL:
-                handle_list_all();
-                break;
             default:
-                printf("Invalid command.\n");
-                break;
+                printf("Unknown command\n");
+                break; // Añadir break para el caso default
         }
     }
-    
+
     close(client_socket);
+    return NULL;
 }
 
 int main (int argc, char * argv[]){
-    int c;
     struct sockaddr_in addr, client;
     socklen_t client_len = sizeof(client);
 
     //Verificar que el puerto esté proporcionado como argumento
     if(argc != 2){
-        fprintf(stderr, "Uso: %s <puerto>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    int port = atoi(argv[1]);
 
     //Inicializar el sistema de versiones
     init_version_system();
@@ -135,20 +136,35 @@ int main (int argc, char * argv[]){
     //5. (comunicación) 
     while (1)
     {
+        int *c;
+        c = malloc(sizeof(int));
+        if(c == NULL){
+            perror("malloc");
+            continue;
+        }
+
+
         //(bloqueante) esperar por una conexión o cliente c - accept
-        c = accept(s, (struct sockaddr *) &client, &client_len);
-        if (c < 0){
+        *c = accept(s, (struct sockaddr *) &client, &client_len);
+
+        if (*c < 0){
             perror("Error accepting connection.");
+            free(c);
             close(s);
             exit(EXIT_FAILURE);
         }
 
-        printf("Connection accepted.\n");
+        pthread_t thread_id;
+        if(pthread_create(&thread_id, NULL, handle_client, c) != 0){
+            perror("pthread_create");
+            close(*c);
+            free(c);
+            continue;
+        }
 
-        handle_client(c);
-        
-        //6. cerrar el socket del cliente c - close
-        close(c);
+        pthread_detach(thread_id);
+
+        printf("Connection accepted.\n");
     }
     
     //7. cerrar el socket del servidor s - close

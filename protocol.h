@@ -12,20 +12,24 @@
 #define CMD_LIST 2
 #define CMD_GET 3
 #define CMD_LIST_ALL 4
+#include "versions.h" 
 
 typedef struct {
     int command;
     char filename[256];
-    char comment [256];
+    char comment [80];
+    char hash [256];
     int versions;
 } Message;
 
+/*
 typedef struct {
     char filename[256];
     int version;
     char comment[256];
     char content[1024];
 } Version;
+*/
 
 void serialize_message(const Message *msg, char *buffer);
 void deserialize_message(const char *buffer, Message *msg);

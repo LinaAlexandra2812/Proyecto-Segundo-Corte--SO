@@ -17,8 +17,8 @@ void serialize_message(const Message *msg, char *buffer){
     memcpy(buffer, msg, sizeof(Message));
 }
 
-void deserialize_message(const char *buffer, Message *msg){
-    memcpy(msg, buffer, sizeof(Message));
+void deserialize_message(const char *buffer, Message *msg) {
+    sscanf(buffer, "%d %s %s %[^\n]", &msg->command, msg->filename, msg->hash, msg->comment);
 }
 
 void handle_add(Message *msg){

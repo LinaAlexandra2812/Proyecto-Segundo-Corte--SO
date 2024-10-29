@@ -13,6 +13,9 @@ clean:
 	rm -r *.o rversions rversionsd
 	rm -rf docs
 
+clean-repo:
+	rm -rf .versions
+
 doc:
 	doxygen
 
