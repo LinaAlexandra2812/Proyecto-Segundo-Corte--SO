@@ -31,15 +31,19 @@ void handle_signal(int signal){
 void init_version_system() {
     struct stat st = {0};
 
-    // Verificar si el directorio "versions" ya existe
-    if (stat("versions", &st) == -1) {
+    // Verificar si el directorio ".versions" ya existe
+    if (stat(".versions", &st) == -1) {
         // Si no existe, crear el directorio
-        if (mkdir("versions", 0700) != 0) {
-            perror("Error creating versions directory");
+        if (mkdir(".versions", 0700) != 0) {
+            perror("Error creating .versions directory");
             exit(EXIT_FAILURE);
         }
+    } else if (!S_ISDIR(st.st_mode)) {
+        // Si existe pero no es un directorio, mostrar un error
+        fprintf(stderr, "Error: .versions exists and is not a directory\n");
+        exit(EXIT_FAILURE);
     } else {
-        printf("Versions directory already exists.\n");
+        printf(".versions directory already exists.\n");
     }
 }
 
